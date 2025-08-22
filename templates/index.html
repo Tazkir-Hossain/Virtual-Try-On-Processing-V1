@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Try-On System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b border-indigo-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                        Virtual Try-On System
+                    </h1>
+                    <div id="ai-status" class="hidden">
+                        <span class="px-3 py-1 text-xs font-medium rounded-full">
+                            <span id="ai-indicator">🤖 AI Status</span>
+                        </span>
+                    </div>
+                </div>
+                <div id="ai-info" class="hidden text-sm text-gray-600">
+                    <span id="ai-info-text">Checking AI capabilities...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Pipeline Visualization -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-indigo-100">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Pipeline: Virtual Try-On with Imagen 3</h2>
+
+            <!-- Pipeline Steps -->
+            <div class="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0 lg:space-x-4">
+
+                <!-- Input Image -->
+                <div class="flex flex-col items-center">
+                    <div class="w-24 h-24 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mb-3">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700">Input Image</p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden lg:block">
+                    <svg class="w-8 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </div>
+
+                <!-- Step 1: Object Detection -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg mb-3 min-w-[160px] text-center">
+                        <p class="font-bold text-sm">Zero-shot</p>
+                        <p class="font-bold text-sm">Object Detection</p>
+                    </div>
+                    <p class="text-xs text-center text-gray-600 max-w-[140px] leading-tight">
+                        Detect object of interest using Gemini
+                    </p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden lg:block">
+                    <svg class="w-8 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </div>
+
+                <!-- Step 2: ROI Key Points -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-blue-500 text-white px-4 py-3 rounded-xl shadow-lg mb-3 min-w-[160px] text-center">
+                        <p class="font-bold text-sm">ROI Key Points</p>
+                    </div>
+                    <p class="text-xs text-center text-gray-600 max-w-[140px] leading-tight">
+                        Get key points within the ROI
+                    </p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden lg:block">
+                    <svg class="w-8 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </div>
+
+                <!-- Step 3: Segmentation -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg mb-3 min-w-[160px] text-center">
+                        <p class="font-bold text-sm">Segmentation</p>
+                        <p class="font-bold text-sm">Mask</p>
+                    </div>
+                    <p class="text-xs text-center text-gray-600 max-w-[140px] leading-tight">
+                        Create binary mask of the object using SAM-2
+                    </p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden lg:block">
+                    <svg class="w-8 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </div>
+
+                <!-- Step 4: Generate -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg mb-3 min-w-[160px] text-center">
+                        <p class="font-bold text-sm">Generate and</p>
+                        <p class="font-bold text-sm">Inpaint</p>
+                    </div>
+                    <p class="text-xs text-center text-gray-600 max-w-[140px] leading-tight">
+                        Generate new image and inpaint on the mask
+                    </p>
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden lg:block">
+                    <svg class="w-8 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </div>
+
+                <!-- Output Image -->
+                <div class="flex flex-col items-center">
+                    <div class="w-24 h-24 bg-green-50 rounded-xl border-2 border-dashed border-green-300 flex items-center justify-center mb-3">
+                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700">Output Image</p>
+                </div>
+            </div>
+
+            <!-- Live Pipeline Status -->
+            <div id="pipeline-status" class="mt-8 hidden">
+                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                    <h3 class="font-semibold text-gray-800 mb-4 text-center">Processing Pipeline Status</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div id="status-step1" class="text-center p-3 rounded-lg bg-white border border-gray-200">
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto mb-2"></div>
+                            <p class="text-xs text-gray-500">Object Detection</p>
+                        </div>
+                        <div id="status-step2" class="text-center p-3 rounded-lg bg-white border border-gray-200">
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto mb-2"></div>
+                            <p class="text-xs text-gray-500">ROI Key Points</p>
+                        </div>
+                        <div id="status-step3" class="text-center p-3 rounded-lg bg-white border border-gray-200">
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto mb-2"></div>
+                            <p class="text-xs text-gray-500">Segmentation</p>
+                        </div>
+                        <div id="status-step4" class="text-center p-3 rounded-lg bg-white border border-gray-200">
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto mb-2"></div>
+                            <p class="text-xs text-gray-500">Generate & Inpaint</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Container -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Panel - Upload and Controls -->
+            <div class="space-y-6">
+                <!-- Upload Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 border border-indigo-100">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        Upload Your Image
+                    </h2>
+
+                    <!-- File Upload Area -->
+                    <div id="upload-area" class="border-2 border-dashed border-indigo-300 rounded-xl p-8 text-center hover:border-indigo-500 transition-colors duration-300 cursor-pointer">
+                        <input type="file" id="image-input" accept="image/*" class="hidden">
+                        <div id="upload-content">
+                            <svg class="mx-auto h-16 w-16 text-indigo-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <p class="text-lg text-gray-600 mb-2">Click to upload or drag and drop</p>
+                            <p class="text-sm text-gray-500">PNG, JPG, GIF up to 16MB</p>
+                        </div>
+                        <div id="upload-preview" class="hidden">
+                            <img id="preview-image" class="max-w-full h-48 object-contain mx-auto rounded-lg shadow-lg">
+                            <p id="filename" class="mt-3 text-sm text-gray-600"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Region Selection -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 border border-indigo-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Select Region
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="upper-region" class="region-btn p-6 border-2 border-gray-200 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-300">
+                            <div class="text-center">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <p class="font-semibold text-gray-700">Upper Body</p>
+                                <p class="text-sm text-gray-500">Shirts, Jackets, Tops</p>
+                            </div>
+                        </button>
+                        <button id="lower-region" class="region-btn p-6 border-2 border-gray-200 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-300">
+                            <div class="text-center">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p class="font-semibold text-gray-700">Lower Body</p>
+                                <p class="text-sm text-gray-500">Pants, Skirts, Shorts</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prompt Input -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 border border-indigo-100">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Describe the Clothing
+                    </h3>
+                    <textarea
+                        id="prompt-input"
+                        rows="4"
+                        placeholder="Describe the clothing item you want to try on... (e.g., 'A red Hawaiian shirt', 'Blue denim jeans', 'Black formal jacket')"
+                        class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-gray-700"
+                    ></textarea>
+
+                    <!-- Example Prompts -->
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600 mb-2">Example prompts:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "A green olive jacket"
+                            </button>
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "Navy blue formal blazer"
+                            </button>
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "Black leather jacket"
+                            </button>
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "Red casual hoodie"
+                            </button>
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "Blue denim jeans"
+                            </button>
+                            <button class="example-prompt px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition-colors">
+                                "Black formal pants"
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Button -->
+                <button
+                    id="process-btn"
+                    class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 px-8 rounded-xl hover:from-purple-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                    disabled
+                >
+                    <span id="btn-text">🪄 Generate Virtual Try-On</span>
+                    <div id="btn-loading" class="hidden flex items-center justify-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                    </div>
+                </button>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="space-y-6">
+                <!-- Results Section -->
+                <div id="results-section" class="bg-white rounded-2xl shadow-xl p-8 border border-indigo-100 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Try-On Results
+                    </h2>
+
+                    <div class="space-y-6">
+                        <!-- Before/After Comparison -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Original Image</h3>
+                                <div class="border-2 border-gray-200 rounded-xl p-4 bg-gray-50">
+                                    <img id="original-image" class="w-full h-auto rounded-lg shadow-lg" alt="Original image">
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Generated by Virtual Try-On</h3>
+                                <div class="border-2 border-green-200 rounded-xl p-4 bg-green-50">
+                                    <img id="result-image" class="w-full h-auto rounded-lg shadow-lg" alt="Virtual try-on result">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Segmentation Mask -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3">Segmentation Mask Used</h3>
+                            <div class="border-2 border-gray-200 rounded-xl p-4 bg-gray-50">
+                                <img id="mask-image" class="w-full h-auto rounded-lg shadow-lg max-h-64 mx-auto object-contain" alt="Segmentation mask">
+                            </div>
+                        </div>
+
+                        <!-- Download Buttons -->
+                        <div class="flex space-x-4">
+                            <a id="download-result" href="#" download class="flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-green-700 transition-colors text-center">
+                                📥 Download Result
+                            </a>
+                            <a id="download-mask" href="#" download class="flex-1 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors text-center">
+                                📥 Download Mask
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        How It Works
+                    </h3>
+                    <div class="space-y-4 text-gray-700">
+                        <div class="flex items-start space-x-3">
+                            <span class="flex-shrink-0 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                            <p><strong>Object Detection:</strong> Gemini AI identifies clothing regions in your photo with zero-shot detection</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <span class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                            <p><strong>ROI Key Points:</strong> System generates precise key points within the detected region of interest</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                            <p><strong>Segmentation Mask:</strong> SAM-2 creates detailed binary masks for accurate clothing boundaries</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <span class="flex-shrink-0 w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                            <p><strong>AI Generation:</strong> Imagen 3 generates and inpaints realistic clothing onto your image</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-white rounded-lg border border-blue-200">
+                        <p class="text-sm text-gray-600 text-center">
+                            <strong>💡 Tip:</strong> For best results, use clear, well-lit photos with the person facing forward
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <p id="toast-message"></p>
+    </div>
+
+    <script>
+        let uploadedFilename = null;
+        let selectedRegion = null;
+        let aiStatus = null;
+
+        // DOM Elements
+        const uploadArea = document.getElementById('upload-area');
+        const imageInput = document.getElementById('image-input');
+        const uploadContent = document.getElementById('upload-content');
+        const uploadPreview = document.getElementById('upload-preview');
+        const previewImage = document.getElementById('preview-image');
+        const filename = document.getElementById('filename');
+        const regionBtns = document.querySelectorAll('.region-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const processBtn = document.getElementById('process-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnLoading = document.getElementById('btn-loading');
+        const resultsSection = document.getElementById('results-section');
+        const originalImage = document.getElementById('original-image');
+        const resultImage = document.getElementById('result-image');
+        const maskImage = document.getElementById('mask-image');
+        const downloadResult = document.getElementById('download-result');
+        const downloadMask = document.getElementById('download-mask');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const aiStatusEl = document.getElementById('ai-status');
+        const aiIndicator = document.getElementById('ai-indicator');
+        const aiInfo = document.getElementById('ai-info');
+        const aiInfoText = document.getElementById('ai-info-text');
+
+        // Check AI status on page load
+        window.addEventListener('load', checkAIStatus);
+
+        function checkAIStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    aiStatus = data;
+                    updateAIStatusDisplay();
+                })
+                .catch(error => {
+                    console.error('Failed to check AI status:', error);
+                    updateAIStatusDisplay(false);
+                });
+        }
+
+        function updateAIStatusDisplay(isOnline = null) {
+            if (isOnline === null && aiStatus) {
+                isOnline = aiStatus.imagen3_available;
+            }
+
+            aiStatusEl.classList.remove('hidden');
+            aiInfo.classList.remove('hidden');
+
+            if (isOnline) {
+                aiIndicator.innerHTML = '🤖 Real Imagen 3 AI';
+                aiStatusEl.className = 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800';
+                aiInfoText.textContent = '✅ Connected to Google Cloud Imagen 3 for photorealistic generation';
+            } else {
+                aiIndicator.innerHTML = '🎭 Enhanced Mock AI';
+                aiStatusEl.className = 'px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800';
+                aiInfoText.textContent = '⚠️ Using enhanced simulation (configure Google Cloud for real AI)';
+            }
+        }
+
+        // File Upload
+        uploadArea.addEventListener('click', () => imageInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-indigo-500', 'bg-indigo-50');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    uploadedFilename = data.filename;
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        filename.textContent = file.name;
+                        uploadContent.classList.add('hidden');
+                        uploadPreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+
+                    checkFormComplete();
+                    showToast('Image uploaded successfully!', 'success');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Upload failed. Please try again.', 'error');
+            });
+        }
+
+        // Region Selection
+        regionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                regionBtns.forEach(b => {
+                    b.classList.remove('border-indigo-500', 'bg-indigo-50');
+                    b.classList.add('border-gray-200');
+                });
+                btn.classList.add('border-indigo-500', 'bg-indigo-50');
+                btn.classList.remove('border-gray-200');
+                selectedRegion = btn.id.replace('-region', '');
+                checkFormComplete();
+            });
+        });
+
+        // Example Prompts
+        document.querySelectorAll('.example-prompt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                promptInput.value = btn.textContent.replace(/"/g, '');
+                checkFormComplete();
+            });
+        });
+
+        // Prompt Input
+        promptInput.addEventListener('input', checkFormComplete);
+
+        function checkFormComplete() {
+            const isComplete = uploadedFilename && selectedRegion && promptInput.value.trim();
+            processBtn.disabled = !isComplete;
+        }
+
+        // Process Button
+        processBtn.addEventListener('click', () => {
+            if (!uploadedFilename || !selectedRegion || !promptInput.value.trim()) {
+                showToast('Please complete all fields', 'error');
+                return;
+            }
+
+            startProcessing();
+
+            const requestData = {
+                filename: uploadedFilename,
+                region_type: selectedRegion,
+                prompt: promptInput.value.trim()
+            };
+
+            fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show results
+                    originalImage.src = `/uploads/${uploadedFilename}`;
+                    resultImage.src = `/results/${data.result_image}`;
+                    maskImage.src = `/results/${data.mask_image}`;
+                    downloadResult.href = `/results/${data.result_image}`;
+                    downloadMask.href = `/results/${data.mask_image}`;
+
+                    completeProcessing();
+                    resultsSection.classList.remove('hidden');
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+                    // Show which AI was used
+                    const aiUsed = data.ai_used || 'AI Generation';
+                    showToast(`✅ Virtual try-on completed using ${aiUsed}!`, 'success');
+                } else {
+                    showToast(data.error, 'error');
+                    resetProcessing();
+                }
+            })
+            .catch(error => {
+                showToast('Processing failed. Please try again.', 'error');
+                resetProcessing();
+            });
+        });
+
+        function startProcessing() {
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+            processBtn.disabled = true;
+
+            // Show pipeline status
+            document.getElementById('pipeline-status').classList.remove('hidden');
+
+            // Animate pipeline steps with realistic timing
+            setTimeout(() => updatePipelineStatus(1, 'processing'), 200);
+            setTimeout(() => updatePipelineStatus(1, 'completed'), 800);
+            setTimeout(() => updatePipelineStatus(2, 'processing'), 900);
+            setTimeout(() => updatePipelineStatus(2, 'completed'), 1400);
+            setTimeout(() => updatePipelineStatus(3, 'processing'), 1500);
+            setTimeout(() => updatePipelineStatus(3, 'completed'), 2200);
+            setTimeout(() => updatePipelineStatus(4, 'processing'), 2300);
+        }
+
+        function updatePipelineStatus(stepNumber, status) {
+            const step = document.getElementById(`status-step${stepNumber}`);
+            const circle = step.querySelector('div');
+            const text = step.querySelector('p');
+
+            if (status === 'processing') {
+                circle.className = 'w-4 h-4 rounded-full border-2 border-blue-500 mx-auto mb-2 animate-pulse';
+                step.className = 'text-center p-3 rounded-lg bg-blue-50 border border-blue-300';
+                text.className = 'text-xs text-blue-600 font-medium';
+            } else if (status === 'completed') {
+                circle.className = 'w-4 h-4 rounded-full bg-green-500 mx-auto mb-2 flex items-center justify-center';
+                circle.innerHTML = '<svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>';
+                step.className = 'text-center p-3 rounded-lg bg-green-50 border border-green-300';
+                text.className = 'text-xs text-green-600 font-medium';
+            }
+        }
+
+        function completeProcessing() {
+            updatePipelineStatus(4, 'completed');
+            setTimeout(resetProcessing, 2000);
+        }
+
+        function resetProcessing() {
+            btnText.classList.remove('hidden');
+            btnLoading.classList.add('hidden');
+            processBtn.disabled = false;
+            checkFormComplete();
+
+            // Hide pipeline status after delay
+            setTimeout(() => {
+                document.getElementById('pipeline-status').classList.add('hidden');
+                // Reset all status steps
+                for (let i = 1; i <= 4; i++) {
+                    const step = document.getElementById(`status-step${i}`);
+                    const circle = step.querySelector('div');
+                    const text = step.querySelector('p');
+                    circle.className = 'w-4 h-4 rounded-full border-2 border-gray-300 mx-auto mb-2';
+                    circle.innerHTML = '';
+                    step.className = 'text-center p-3 rounded-lg bg-white border border-gray-200';
+                    text.className = 'text-xs text-gray-500';
+                }
+            }, 3000);
+        }
+
+        function showToast(message, type = 'error') {
+            toastMessage.textContent = message;
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white`;
+            
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
